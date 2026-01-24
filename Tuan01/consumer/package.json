@@ -4,14 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node consumer_dlq.js",
+    "dev": "node --watch --watch-path=. consumer_dlq.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "amqplib": "^0.10.9",
-    "express": "^5.2.1"
+    "amqplib": "^0.10.9"
   }
 }
