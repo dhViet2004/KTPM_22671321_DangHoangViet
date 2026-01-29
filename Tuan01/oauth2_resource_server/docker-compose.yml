@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  auth-server:
+    build: ./auth-server
+    container_name: auth-server
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    volumes:
+      - ./auth-server:/app
+    command: mvn spring-boot:run
+
+  resource-server:
+    build: ./resource-server
+    container_name: resource-server
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      AUTH_SERVER_URL: http://auth-server:8080
+    volumes:
+      - ./resource-server:/app
+    command: mvn spring-boot:run
+    depends_on:
+      - auth-server
+
+  client:
+    build: ./client
+    container_name: oauth2-client
+    ports:
+      - "3000:3000"
+    environment:
+      AUTH_SERVER_URL: http://auth-server:8080
+      RESOURCE_SERVER_URL: http://resource-server:8081
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    develop:
+      watch:
+        - action: sync
+          path: ./client
+          target: /app
+          ignore:
+            - node_modules/
+    command: npm run dev
+    depends_on:
+      - resource-server

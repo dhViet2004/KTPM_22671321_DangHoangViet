@@ -1,0 +1,19 @@
+{
+  "name": "oauth2-client",
+  "version": "1.0.0",
+  "description": "OAuth2 Client for testing Resource Server",
+  "main": "client.js",
+  "scripts": {
+    "start": "node client.js",
+    "dev": "node --watch --watch-path=. client.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "axios": "^1.6.2",
+    "cors": "^2.8.5"
+  }
+}

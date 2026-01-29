@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: resource-server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://auth-server:8080/oauth2/.well-known/jwks.json
+
+server:
+  port: 8081
+
+logging:
+  level:
+    root: INFO
+    com.oauth2.demo: DEBUG
