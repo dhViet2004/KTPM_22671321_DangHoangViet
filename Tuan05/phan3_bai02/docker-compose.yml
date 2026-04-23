@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: p3-b2-mongo
+    restart: unless-stopped
+    expose:
+      - "27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  node-app:
+    build: ./app
+    container_name: p3-b2-node-app
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://mongo:27017/sampledb
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo_data:
