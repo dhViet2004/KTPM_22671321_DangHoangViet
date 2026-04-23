@@ -1,0 +1,31 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: bai12-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana-oss:11.1.0
+    container_name: bai12-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: bai12-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+
+volumes:
+  grafana_data:

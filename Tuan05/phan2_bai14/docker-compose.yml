@@ -1,0 +1,21 @@
+services:
+  service-a:
+    image: hashicorp/http-echo:1.0.0
+    container_name: bai14-service-a
+    command: ["-text=Hello from service-a", "-listen=:5678"]
+    networks:
+      - private_net
+
+  service-b:
+    image: curlimages/curl:8.11.1
+    container_name: bai14-service-b
+    depends_on:
+      - service-a
+    command: ["sh", "-c", "while true; do curl -s http://service-a:5678; echo; sleep 5; done"]
+    networks:
+      - private_net
+
+networks:
+  private_net:
+    driver: bridge
+    internal: true
