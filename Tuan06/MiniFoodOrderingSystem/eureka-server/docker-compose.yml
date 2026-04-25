@@ -1,0 +1,32 @@
+version: '3.8'
+
+# =============================================================================
+# Eureka Server - Service Registry
+# IP: 172.29.176.1
+# =============================================================================
+services:
+  eureka-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SERVER_PORT=8761
+      - EUREKA_HOSTNAME=172.29.176.1
+      - HOST_IP=172.29.176.1
+    networks:
+      - food-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+networks:
+  food-network:
+    name: food-network
+    driver: bridge

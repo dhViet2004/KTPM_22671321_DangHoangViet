@@ -1,0 +1,57 @@
+version: '3.8'
+
+# =============================================================================
+# Order Service - Quản lý đơn hàng
+# Eureka Server IP: 172.29.176.1
+# =============================================================================
+services:
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SERVER_PORT=8083
+      - EUREKA_SERVER_URL=http://172.29.176.1:8761/eureka/
+      - HOST_IP=172.29.176.1
+      - DB_HOST=postgres-order
+      - DB_PORT=5432
+      - DB_NAME=orderdb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres123
+      - H2_ENABLED=false
+      - USER_SERVICE_NAME=USER-SERVICE
+      - FOOD_SERVICE_NAME=FOOD-SERVICE
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+    networks:
+      - food-network
+    restart: unless-stopped
+
+  postgres-order:
+    image: postgres:16-alpine
+    container_name: postgres-order
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres-order-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orderdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-network
+
+volumes:
+  postgres-order-data:
+
+networks:
+  food-network:
+    name: food-network
+    driver: bridge

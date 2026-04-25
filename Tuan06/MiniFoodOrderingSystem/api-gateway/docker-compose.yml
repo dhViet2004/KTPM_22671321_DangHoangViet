@@ -1,0 +1,33 @@
+version: '3.8'
+
+# =============================================================================
+# API Gateway - Entry Point + Routing + CORS
+# Eureka Server IP: 172.29.176.1
+# =============================================================================
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - EUREKA_SERVER_URL=http://172.29.176.1:8761/eureka/
+      - HOST_IP=172.29.176.1
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://172.29.176.1:3000
+    networks:
+      - food-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+networks:
+  food-network:
+    name: food-network
+    driver: bridge

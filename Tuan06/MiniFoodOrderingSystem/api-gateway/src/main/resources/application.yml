@@ -1,0 +1,127 @@
+# ============================================
+# API Gateway Configuration
+# Spring Cloud Gateway - Port 8080
+# Service Discovery via Netflix Eureka
+# ============================================
+
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+
+  # ============================================
+  # ROUTING CONFIGURATION
+  # Use lb://<SERVICE_NAME> — Eureka Load Balancer resolves to actual IP
+  # ============================================
+  cloud:
+    gateway:
+      routes:
+        # ── User Service ──────────────────────────────────────────
+        - id: user-service
+          uri: lb://USER-SERVICE          # ← Eureka resolves to USER-SERVICE:8081
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=0
+
+        # ── Food Service ─────────────────────────────────────────
+        - id: food-service
+          uri: lb://FOOD-SERVICE         # ← Eureka resolves to FOOD-SERVICE:8082
+          predicates:
+            - Path=/api/foods/**
+          filters:
+            - StripPrefix=0
+
+        # ── Order Service ────────────────────────────────────────
+        - id: order-service
+          uri: lb://ORDER-SERVICE        # ← Eureka resolves to ORDER-SERVICE:8083
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=0
+
+        # ── Payment Service ──────────────────────────────────────
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE      # ← Eureka resolves to PAYMENT-SERVICE:8084
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=0
+
+        # ── Notification Service ────────────────────────────────
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE  # ← Eureka resolves to NOTIFICATION-SERVICE:8085
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - StripPrefix=0
+
+      # ============================================================
+      # EUREKA SERVICE DISCOVERY LOCATOR
+      # Enables automatic routing by service name (no manual route config needed)
+      # When enabled, Gateway can proxy /<service-name>/** automatically
+      # ============================================================
+      discovery:
+        locator:
+          enabled: true                  # ← Enable auto-discovery from Eureka
+          lower-case-service-id: true   # ← /user-service/** → USER-SERVICE
+
+      # ============================================================
+      # GLOBAL CORS — flexible origins for local and LAN access
+      # ============================================================
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+              - "http://172.29.176.1:3000"
+              - "http://172.29.176.1:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
+
+# ================================================================
+# EUREKA CLIENT CONFIGURATION
+# Register Gateway as a Eureka Client so it can DISCOVER other services
+# ================================================================
+eureka:
+  instance:
+    hostname: ${HOST_IP:localhost}
+    prefer-ip-address: true
+
+  client:
+    # Point to Eureka Server - configure via EUREKA_SERVER_URL env var
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+    # Register this gateway as a Eureka client
+    register-with-eureka: true
+    fetch-registry: true
+
+    # Heartbeat interval (default: 30s)
+    registry-fetch-interval-seconds: 5
+
+# ================================================================
+# ACTUATOR — health checks and route inspection
+# ================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,routes
+  endpoint:
+    health:
+      show-details: always
+  gateway:
+    enabled: true
