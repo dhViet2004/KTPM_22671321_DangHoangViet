@@ -1,0 +1,46 @@
+# ============================================
+# Eureka Server Configuration
+# Service Discovery - Port 8761
+# ============================================
+
+server:
+  port: ${SERVER_PORT:8761}
+
+spring:
+  application:
+    name: eureka-server
+
+# ============================================
+# Eureka Server Settings
+# IMPORTANT: Disable self-registration
+# ============================================
+eureka:
+  instance:
+    # Use IP address for LAN access, fallback to hostname
+    hostname: ${EUREKA_HOSTNAME:localhost}
+    prefer-ip-address: true
+
+  # Do NOT register with itself
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+    # Point to Eureka Server URL - use environment variable for distributed setup
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://${eureka.instance.hostname}:${server.port}/eureka/}
+
+  # Dashboard settings
+  dashboard:
+    enabled: true
+
+# ============================================
+# Actuator
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

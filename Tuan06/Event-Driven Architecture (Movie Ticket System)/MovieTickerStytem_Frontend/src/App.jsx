@@ -3,6 +3,11 @@ import { Routes, Route } from 'react-router-dom';
 import Home from '@/pages/Home';
 import SeatSelection from '@/features/booking/SeatSelection';
 import BookingSuccess from '@/pages/BookingSuccess';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Profile from '@/pages/Profile';
+import MovieDetail from '@/pages/MovieDetail';
+import { Toaster } from 'react-hot-toast';
 
 /**
  * App Component - Main application router
@@ -16,8 +21,13 @@ import BookingSuccess from '@/pages/BookingSuccess';
 function App() {
   return (
     <div className="App">
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/movie/:movieId" element={<MovieDetail />} />
         <Route path="/booking/:movieId/:showtimeId" element={<SeatSelection />} />
         <Route path="/booking-success/:bookingId" element={<BookingSuccess />} />
         

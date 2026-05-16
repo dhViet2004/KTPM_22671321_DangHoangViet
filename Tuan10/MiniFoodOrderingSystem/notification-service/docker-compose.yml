@@ -1,0 +1,54 @@
+version: '3.8'
+
+# =============================================================================
+# Notification Service - Gửi thông báo
+# Eureka Server IP: 172.29.176.1
+# =============================================================================
+services:
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SERVER_PORT=8085
+      - EUREKA_SERVER_URL=http://172.29.176.1:8761/eureka/
+      - HOST_IP=172.29.176.1
+      - DB_HOST=postgres-notification
+      - DB_PORT=5432
+      - DB_NAME=notificationdb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres123
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+    networks:
+      - food-network
+    restart: unless-stopped
+
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: postgres-notification
+    environment:
+      POSTGRES_DB: notificationdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres-notification-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notificationdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-network
+
+volumes:
+  postgres-notification-data:
+
+networks:
+  food-network:
+    name: food-network
+    driver: bridge

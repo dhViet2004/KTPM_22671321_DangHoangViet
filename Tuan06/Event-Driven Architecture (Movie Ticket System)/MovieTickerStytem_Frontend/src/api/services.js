@@ -44,6 +44,8 @@ export const bookingsApi = {
    * Tạo yêu cầu đặt vé mới
    * POST /bookings
    * 
+   * Payload: { userId, tripId, seatNumber, paymentMethod }
+   * 
    * Lưu ý: Đây là request bất đồng bộ!
    * Response trả về ngay lập tức với status PENDING
    * Backend xử lý qua RabbitMQ và cập nhật trạng thái sau đó
@@ -106,7 +108,7 @@ export const authApi = {
    * POST /auth/login
    */
   login: async (credentials) => {
-    const response = await axiosClient.post('/auth/login', credentials);
+    const response = await axiosClient.post('/v1/users/login', credentials);
     return response.data;
   },
 
@@ -115,7 +117,7 @@ export const authApi = {
    * POST /auth/register
    */
   register: async (userData) => {
-    const response = await axiosClient.post('/auth/register', userData);
+    const response = await axiosClient.post('/v1/users/register', userData);
     return response.data;
   },
 
@@ -134,6 +136,15 @@ export const authApi = {
    */
   logout: async () => {
     const response = await axiosClient.post('/auth/logout');
+    return response.data;
+  },
+
+  /**
+   * Lấy thông tin cá nhân
+   * GET /v1/users/profile
+   */
+  getProfile: async () => {
+    const response = await axiosClient.get('/v1/users/profile');
     return response.data;
   },
 };

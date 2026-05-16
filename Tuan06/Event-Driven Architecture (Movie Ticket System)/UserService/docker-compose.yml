@@ -14,7 +14,7 @@ services:
     networks:
       - userservice-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     networks:
       - userservice-network
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,8 +56,11 @@ services:
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
       EUREKA_SERVER_URL: http://192.168.137.152:8761/eureka/
-      EUREKA_HOSTNAME: 192.168.137.105
-      HOST_IP: 192.168.137.105
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      # CỰC KỲ QUAN TRỌNG: Ghi cứng IP của máy tính ĐANG CHẠY booking-service
+      EUREKA_INSTANCE_IP_ADDRESS: 192.168.137.105
+      # Tùy chọn giúp hiển thị ID đẹp và rõ ràng trên bảng điều khiển Eureka
+      EUREKA_INSTANCE_INSTANCE_ID: "$${spring.application.name}:$${eureka.instance.ip-address}:$${server.port}"
     depends_on:
       mysql:
         condition: service_healthy

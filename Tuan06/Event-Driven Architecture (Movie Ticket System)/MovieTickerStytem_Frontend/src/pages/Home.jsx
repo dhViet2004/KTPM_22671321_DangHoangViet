@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { moviesApi } from '@/api/services';
+import Navbar from '@/components/Navbar';
 
 /**
  * Home Page - Trang chủ hiển thị danh sách phim
@@ -15,10 +16,19 @@ const Home = () => {
       try {
         setIsLoading(true);
         const data = await moviesApi.getAllMovies();
-        setMovies(data);
+        
+        // Ánh xạ dữ liệu từ API sang cấu trúc của Component
+        const mappedMovies = data.map(movie => ({
+          ...movie,
+          duration: movie.durationMinutes || movie.duration,
+          // API chưa có poster, sử dụng ảnh mặc định dựa trên genre hoặc ảnh placeholder
+          poster: movie.poster || `https://placehold.co/400x600/1a1a1a/e50914?text=${encodeURIComponent(movie.title)}`
+        }));
+        
+        setMovies(mappedMovies);
       } catch (err) {
         console.error('Error fetching movies:', err);
-        setError('Không thể tải danh sách phim');
+        setError('Không thể tải danh sách phim từ server');
       } finally {
         setIsLoading(false);
       }
@@ -83,6 +93,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-netflix-black">
+      <Navbar />
       {/* Hero Section */}
       <div className="relative h-[500px] bg-gradient-to-t from-netflix-black via-transparent to-transparent">
         <div 

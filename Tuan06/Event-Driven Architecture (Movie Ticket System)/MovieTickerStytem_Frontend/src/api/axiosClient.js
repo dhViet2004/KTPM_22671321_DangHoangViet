@@ -2,7 +2,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 
-const API_GATEWAY_BASE_URL = 'http://localhost:8080/api/v1';
+const API_GATEWAY_BASE_URL = '/api';
 
 const axiosClient = axios.create({
   baseURL: API_GATEWAY_BASE_URL,

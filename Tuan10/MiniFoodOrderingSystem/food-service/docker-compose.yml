@@ -1,0 +1,55 @@
+version: '3.8'
+
+# =============================================================================
+# Food Service - Quản lý món ăn
+# Eureka Server IP: 172.29.176.1
+# =============================================================================
+services:
+  food-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - EUREKA_SERVER_URL=http://172.29.176.1:8761/eureka/
+      - HOST_IP=172.29.176.1
+      - DB_HOST=postgres-food
+      - DB_PORT=5432
+      - DB_NAME=fooddb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres123
+      - H2_ENABLED=false
+    depends_on:
+      postgres-food:
+        condition: service_healthy
+    networks:
+      - food-network
+    restart: unless-stopped
+
+  postgres-food:
+    image: postgres:16-alpine
+    container_name: postgres-food
+    environment:
+      POSTGRES_DB: fooddb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres-food-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fooddb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-network
+
+volumes:
+  postgres-food-data:
+
+networks:
+  food-network:
+    name: food-network
+    driver: bridge

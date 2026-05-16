@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { bookingsApi } from '@/api/services';
 import { useBookingStore } from '@/store/bookingStore';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * useCheckout - Custom Hook xử lý luồng Event-Driven Đặt Vé
@@ -206,13 +207,21 @@ export const useCheckout = (options = {}) => {
 
     try {
       // Bước 1: Gọi API tạo booking
-      // POST /bookings với payload { movieId, seatIds }
+      // POST /api/bookings với payload theo format yêu cầu
+      const { user } = useAuthStore.getState();
+      
+      // Lấy ghế đầu tiên (vì format yêu cầu seatNumber là số đơn)
+      // Nếu backend hỗ trợ nhiều ghế, có thể thay đổi logic ở đây
+      const seat = selectedSeats[0];
+
       const bookingPayload = {
-        movieId: selectedMovie.id,
-        seatIds: selectedSeats.map(seat => seat.id),
-        showtimeId: selectedShowtime.id,
+        userId: user?.id || user?.userId || '123', // Ưu tiên ID từ store
+        tripId: selectedShowtime.id,               // Map showtimeId sang tripId
+        seatNumber: seat.number,                   // Số ghế (ví dụ: 5)
+        paymentMethod: 'CASH',                     // Mặc định là CASH theo ví dụ
       };
 
+      console.log('Sending booking request:', bookingPayload);
       const bookingResponse = await bookingsApi.createBooking(bookingPayload);
       
       // Nhận được response thành công với bookingId và status PENDING

@@ -1,0 +1,55 @@
+version: '3.8'
+
+# =============================================================================
+# User Service - Quản lý người dùng
+# Eureka Server IP: 172.29.176.1
+# =============================================================================
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - EUREKA_SERVER_URL=http://172.29.176.1:8761/eureka/
+      - HOST_IP=172.29.176.1
+      - DB_HOST=postgres-user
+      - DB_PORT=5432
+      - DB_NAME=userdb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres123
+      - H2_ENABLED=false
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+    networks:
+      - food-network
+    restart: unless-stopped
+
+  postgres-user:
+    image: postgres:16-alpine
+    container_name: postgres-user
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d userdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-network
+
+volumes:
+  postgres-user-data:
+
+networks:
+  food-network:
+    name: food-network
+    driver: bridge
