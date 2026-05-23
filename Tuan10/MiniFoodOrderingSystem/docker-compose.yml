@@ -1,0 +1,51 @@
+services:
+  user-service:
+    build: ./user-service
+    container_name: minifood-user-service
+    ports:
+      - "8081:8081"
+
+  food-service:
+    build: ./food-service
+    container_name: minifood-food-service
+    ports:
+      - "8082:8082"
+
+  order-service:
+    build: ./order-service
+    container_name: minifood-order-service
+    ports:
+      - "8083:8083"
+    environment:
+      USER_SERVICE_URL: http://user-service:8081
+      FOOD_SERVICE_URL: http://food-service:8082
+    depends_on:
+      - user-service
+      - food-service
+
+  payment-service:
+    build: ./payment-service
+    container_name: minifood-payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      ORDER_SERVICE_URL: http://order-service:8083
+    depends_on:
+      - order-service
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_USER_API_URL: http://localhost:8081
+        VITE_FOOD_API_URL: http://localhost:8082
+        VITE_ORDER_API_URL: http://localhost:8083
+        VITE_PAYMENT_API_URL: http://localhost:8084
+    container_name: minifood-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - user-service
+      - food-service
+      - order-service
+      - payment-service

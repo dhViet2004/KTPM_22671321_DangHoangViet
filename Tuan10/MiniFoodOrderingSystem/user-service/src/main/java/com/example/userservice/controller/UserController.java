@@ -1,70 +1,90 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.AuthResponse;
-import com.example.userservice.dto.LoginRequest;
-import com.example.userservice.dto.RegisterRequest;
-import com.example.userservice.dto.UserResponse;
-import com.example.userservice.service.UserService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
-@RequestMapping("/api/users")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UserController {
+    private final AtomicLong ids = new AtomicLong(2);
+    private final Map<Long, User> users = new ConcurrentHashMap<>();
+    private final JwtService jwtService;
 
-    private final UserService userService;
+    public UserController(JwtService jwtService) {
+        this.jwtService = jwtService;
+        users.put(1L, new User(1L, "admin", "123456", "ADMIN"));
+        users.put(2L, new User(2L, "user", "123456", "USER"));
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            AuthResponse response = userService.register(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+        boolean exists = users.values().stream().anyMatch(user -> user.username().equalsIgnoreCase(request.username()));
+        if (exists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
         }
+        long id = ids.incrementAndGet();
+        User user = new User(id, request.username(), request.password(), request.role() == null ? "USER" : request.role());
+        users.put(id, user);
+        return authResponse(user);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+        return users.values().stream()
+                .filter(user -> user.username().equalsIgnoreCase(request.username()) && user.password().equals(request.password()))
+                .findFirst()
+                .map(this::authResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+    }
+
+    @GetMapping("/users")
+    public List<UserResponse> users() {
+        return users.values().stream().map(UserResponse::from).toList();
+    }
+
+    @GetMapping("/users/{id}/validate")
+    public UserResponse validateUser(@PathVariable Long id) {
+        User user = users.get(id);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        return UserResponse.from(user);
+    }
+
+    @PostMapping("/token/validate")
+    public TokenValidateResponse validateToken(@Valid @RequestBody TokenValidateRequest request) {
         try {
-            AuthResponse response = userService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(401).build();
+            JwtService.TokenInfo info = jwtService.validate(request.token());
+            if (!users.containsKey(info.userId())) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token user no longer exists");
+            }
+            return new TokenValidateResponse(true, info.userId(), info.username(), info.role(), info.expiresAt().toString());
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    private AuthResponse authResponse(User user) {
+        return new AuthResponse(user.id(), user.username(), user.role(),
+                jwtService.generateToken(user.id(), user.username(), user.role()));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        try {
-            UserResponse user = userService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+    record User(Long id, String username, String password, String role) {}
+    record RegisterRequest(@NotBlank String username, @NotBlank String password, String role) {}
+    record LoginRequest(@NotBlank String username, @NotBlank String password) {}
+    record TokenValidateRequest(@NotBlank String token) {}
+    record TokenValidateResponse(boolean valid, Long userId, String username, String role, String expiresAt) {}
+    record UserResponse(Long id, String username, String role) {
+        static UserResponse from(User user) {
+            return new UserResponse(user.id(), user.username(), user.role());
         }
     }
-
-    @GetMapping("/{id}/validate")
-    public ResponseEntity<ValidateResponse> validateUser(@PathVariable Long id) {
-        boolean exists = userService.validateUser(id);
-        if (exists) {
-            UserResponse user = userService.getUserById(id);
-            return ResponseEntity.ok(new ValidateResponse(true, user.getUsername(), user.getRole()));
-        }
-        return ResponseEntity.ok(new ValidateResponse(false, null, null));
-    }
-
-    public record ValidateResponse(boolean valid, String username, String role) {}
+    record AuthResponse(Long id, String username, String role, String token) {}
 }

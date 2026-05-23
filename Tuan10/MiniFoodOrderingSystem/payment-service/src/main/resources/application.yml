@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: payment-service
+server:
+  port: 8084
+  address: 0.0.0.0
+
+services:
+  order-url: ${ORDER_SERVICE_URL:http://localhost:8083}

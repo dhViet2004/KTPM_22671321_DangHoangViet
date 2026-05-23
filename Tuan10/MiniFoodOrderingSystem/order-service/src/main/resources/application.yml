@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: order-service
+server:
+  port: 8083
+  address: 0.0.0.0
+
+services:
+  user-url: ${USER_SERVICE_URL:http://localhost:8081}
+  food-url: ${FOOD_SERVICE_URL:http://localhost:8082}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userServiceCircuitBreaker:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+      foodServiceCircuitBreaker:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2

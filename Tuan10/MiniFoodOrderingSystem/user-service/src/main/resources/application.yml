@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: user-service
+server:
+  port: 8081
+  address: 0.0.0.0
+
+jwt:
+  secret: ${JWT_SECRET:tuan10-demo-secret-key-for-jwt-signing-please-change}
+  expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
